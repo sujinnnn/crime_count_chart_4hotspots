@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Number of crimes by hot spot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: transparent; font-family: "Public Sans", "Helvetica Neue", Arial, sans-serif; color: #1F2A2E; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px; position: relative; }
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { font-size: 15px; color: #5B666A; margin: 0 0 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+  .legend li { font-size: 14px; font-weight: 500; padding: 6px 12px; border: 1px solid #D9DEE0; border-radius: 999px; display: flex; align-items: center; gap: 8px; }
+  .legend span { width: 10px; height: 10px; border-radius: 50%; }
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .grid { stroke: #DDE2E4; stroke-width: 1; stroke-dasharray: 3 5; }
+  .baseline { stroke: #9AA5A9; stroke-width: 1; }
+  .axis-label { font-size: 14px; fill: #6B7679; }
+  .year-label { font-size: 15px; font-weight: 400; fill: #3F4A4D; }
+  .axis-title { font-size: 13px; font-weight: 600; fill: #6B7679; letter-spacing: 0.02em; }
+  .line { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; transition: opacity 0.15s; }
+  .dot { cursor: pointer; stroke: #FFFFFF; stroke-width: 2.5; transition: opacity 0.15s, r 0.12s; }
+  .dot:focus { outline: none; }
+  svg.dim .line, svg.dim .dot { opacity: 0.18; }
+  svg.dim .line.on, svg.dim .dot.on { opacity: 1; }
+  .dot.hot { r: 9; }
+  .tip {
+    position: absolute; pointer-events: none; background: #1F2A2E; color: #FFFFFF;
+    border-radius: 8px; padding: 10px 14px; font-size: 14px; line-height: 1.4;
+    box-shadow: 0 8px 24px rgba(31,42,46,0.18); opacity: 0; transform: translateY(4px);
+    transition: opacity 0.12s, transform 0.12s; white-space: nowrap;
+  }
+  .tip.show { opacity: 1; transform: translateY(0); }
+  .tip .name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .tip .name i { width: 10px; height: 10px; border-radius: 50%; }
+  .tip .val { font-size: 22px; font-weight: 700; margin-top: 2px; }
+  .tip .val small { font-size: 13px; font-weight: 400; color: #C5CED1; margin-left: 4px; }
+  .tip .meta { font-size: 13px; color: #C5CED1; }
+  @media (prefers-reduced-motion: reduce) { .tip, .line, .dot { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Number of crimes by hot spot</h1>
+  <p class="sub">Hover over a point to see its value.</p>
+  <ul class="legend" id="legend"></ul>
+  <svg id="chart" viewBox="0 0 960 500" role="img" aria-label="Line chart of number of crimes by hot spot and year"></svg>
+  <div class="tip" id="tip" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+// ===== EDIT YOUR DATA HERE =====
+// To add years, add them to "years" and add one number to the end of each "values" list.
+const years = ['2020', '2021', '2022', '2023', '2024', '2025'];
+const series = [
+  { name: 'Stone Mill Run', color: '#3B5BDB', values: [183, 186, 198, 240, 211, 214] },
+  { name: 'Snapfinger',     color: '#2F9E44', values: [94, 139, 126, 140, 161, 155] },
+  { name: 'Panthersville',  color: '#E8590C', values: [241, 304, 293, 279, 211, 214] },
+  { name: 'Belvedere',      color: '#C2255C', values: [187, 189, 193, 124, 147, 146] }
+];
+const yMax = 350, yStep = 50;
+// ================================
+
+const svg = document.getElementById('chart');
+const tip = document.getElementById('tip');
+const wrap = document.querySelector('.wrap');
+const NS = 'http://www.w3.org/2000/svg';
+const W = 960, H = 500, m = { top: 16, right: 30, bottom: 64, left: 70 };
+const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+const x = i => m.left + (years.length === 1 ? iw / 2 : i * iw / (years.length - 1));
+const y = v => m.top + ih - (v / yMax) * ih;
+
+function el(tag, attrs, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  svg.appendChild(e);
+  return e;
+}
+
+document.getElementById('legend').innerHTML = series
+  .map(s => '<li><span style="background:' + s.color + '"></span>' + s.name + '</li>').join('');
+
+// Grid and axes
+for (let v = 0; v <= yMax; v += yStep) {
+  el('line', { x1: m.left, x2: W - m.right, y1: y(v), y2: y(v), class: v === 0 ? 'baseline' : 'grid' });
+  el('text', { x: m.left - 14, y: y(v) + 5, 'text-anchor': 'end', class: 'axis-label' }, v);
+}
+years.forEach((yr, i) => {
+  el('text', { x: x(i), y: m.top + ih + 28, 'text-anchor': 'middle', class: 'year-label' }, yr);
+});
+el('text', { x: m.left + iw / 2, y: H - 6, 'text-anchor': 'middle', class: 'axis-title' }, 'Year');
+el('text', { x: -(m.top + ih / 2), y: 18, transform: 'rotate(-90)', 'text-anchor': 'middle', class: 'axis-title' }, 'Number of crimes');
+
+// Lines
+const lines = series.map(s => {
+  const d = s.values.map((v, i) => (i ? 'L' : 'M') + x(i) + ' ' + y(v)).join(' ');
+  return el('path', { d: d, stroke: s.color, class: 'line' });
+});
+
+// Tooltip: only the hovered point
+const dots = [];
+function showTip(dot, i, k) {
+  const s = series[k], v = s.values[i];
+  let change = '';
+  if (i > 0) {
+    const diff = v - s.values[i - 1];
+    change = '<div class="meta">' + (diff > 0 ? '+' : '') + diff + ' from ' + years[i - 1] + '</div>';
+  }
+  // If other hot spots have the exact same value here, their dots overlap: list them all
+  const tied = series.filter(o => o.values[i] === v);
+  const names = tied.map(o => '<div class="name"><i style="background:' + o.color + '"></i>' + o.name + '</div>').join('');
+  if (tied.length > 1) change = '<div class="meta">Same value for ' + tied.length + ' hot spots</div>';
+  tip.innerHTML = names +
+    '<div class="meta">' + years[i] + '</div>' +
+    '<div class="val">' + v + '<small>crimes</small></div>' + change;
+
+  svg.classList.add('dim');
+  const tiedIdx = series.map((o, j) => o.values[i] === v ? j : -1).filter(j => j >= 0);
+  tiedIdx.forEach(j => lines[j].classList.add('on'));
+  dots.forEach(d => { if (tiedIdx.includes(d.k)) d.el.classList.add('on'); });
+  dot.classList.add('hot');
+
+  tip.classList.add('show');
+  const box = wrap.getBoundingClientRect();
+  const r = dot.getBoundingClientRect();
+  let left = r.left - box.left + r.width / 2 - tip.offsetWidth / 2;
+  let top = r.top - box.top - tip.offsetHeight - 14;
+  left = Math.max(4, Math.min(left, box.width - tip.offsetWidth - 4));
+  if (top < 0) top = r.bottom - box.top + 14;
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+}
+function hideTip() {
+  tip.classList.remove('show');
+  svg.classList.remove('dim');
+  lines.forEach(l => l.classList.remove('on'));
+  dots.forEach(d => d.el.classList.remove('on', 'hot'));
+}
+
+series.forEach((s, k) => {
+  s.values.forEach((v, i) => {
+    const c = el('circle', { cx: x(i), cy: y(v), r: 6.5, fill: s.color, class: 'dot', tabindex: 0,
+      'aria-label': s.name + ', ' + years[i] + ': ' + v + ' crimes' });
+    dots.push({ el: c, k: k });
+    c.addEventListener('mouseenter', () => showTip(c, i, k));
+    c.addEventListener('focus', () => showTip(c, i, k));
+    c.addEventListener('click', () => showTip(c, i, k));
+    c.addEventListener('mouseleave', hideTip);
+    c.addEventListener('blur', hideTip);
+  });
+});
+</script>
+</body>
+</html>
