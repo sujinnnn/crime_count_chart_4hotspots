@@ -53,6 +53,7 @@ const series = [
 ];
 const yTitle = 'Number of parcels';
 const unit = 'parcels';
+const yMaxFixed = 400, yStepFixed = 50;
 // ================================
 
 const svg = document.getElementById('chart');
@@ -63,8 +64,8 @@ const totals = groups.map((_, g) => series.reduce((sum, s) => sum + s.values[g],
 const maxTotal = Math.max(...totals);
 const rawStep = maxTotal / 5;
 const pow = Math.pow(10, Math.floor(Math.log10(rawStep)));
-const yStep = [1, 2, 2.5, 5, 10].map(n => n * pow).find(n => n >= rawStep);
-const yMax = Math.ceil(maxTotal / yStep) * yStep;
+const yStep = typeof yStepFixed !== 'undefined' ? yStepFixed : [1, 2, 2.5, 5, 10].map(n => n * pow).find(n => n >= rawStep);
+const yMax = typeof yMaxFixed !== 'undefined' ? yMaxFixed : Math.ceil(maxTotal / yStep) * yStep;
 let segs = [];
 
 function el(tag, attrs, text) {
@@ -81,16 +82,21 @@ function draw() {
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML = '';
   segs = [];
-  const m = { top: 26, right: 16, bottom: 40, left: 62 };
+  const m = { top: 56, right: 16, bottom: 40, left: 62 };
   const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
   const band = iw / groups.length;
-  const barW = Math.min(120, band * 0.6);
+  const barW = Math.min(180, band * 0.78);
   const xc = g => m.left + band * g + band / 2;
   const y = v => m.top + ih - (v / yMax) * ih;
 
   for (let v = 0; v <= yMax; v += yStep) {
     el('line', { x1: m.left, x2: W - m.right, y1: y(v), y2: y(v), class: v === 0 ? 'baseline' : 'grid' });
     el('text', { x: m.left - 12, y: y(v) + 4, 'text-anchor': 'end', class: 'axis-label' }, v);
+  }
+  // Show the top of the range (e.g. 430) if it isn't already a grid step
+  if (yMax % yStep !== 0) {
+    el('line', { x1: m.left, x2: W - m.right, y1: y(yMax), y2: y(yMax), class: 'grid' });
+    el('text', { x: m.left - 12, y: y(yMax) + 4, 'text-anchor': 'end', class: 'axis-label' }, yMax);
   }
   groups.forEach((name, g) => el('text', { x: xc(g), y: m.top + ih + 26, 'text-anchor': 'middle', class: 'cat-label' }, name));
   el('text', { x: -(m.top + ih / 2), y: 16, transform: 'rotate(-90)', 'text-anchor': 'middle', class: 'axis-title' }, yTitle);

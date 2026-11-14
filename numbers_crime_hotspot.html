@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; font-family: "Public Sans", "Helvetica Neue", Arial, sans-serif; color: #1F2A2E; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #F8FBF6; font-family: "Public Sans", "Helvetica Neue", Arial, sans-serif; color: #1F2A2E; }
   .wrap { position: relative; width: 100%; height: 100%; }
   svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .grid { stroke: #DDE2E4; stroke-width: 1; stroke-dasharray: 3 5; }
+  .grid { stroke: #DCE5DA; stroke-width: 1; stroke-dasharray: 3 5; }
   .baseline { stroke: #9AA5A9; stroke-width: 1; }
   .axis-label { font-size: 13px; fill: #6B7679; }
   .year-label { font-size: 14px; fill: #3F4A4D; }
@@ -48,7 +48,7 @@ const series = [
   { name: 'Panthersville',  color: '#E8590C', values: [241, 304, 293, 279, 211, 214] },
   { name: 'Belvedere',      color: '#C2255C', values: [187, 189, 193, 124, 147, 146] }
 ];
-const yMax = 350, yStep = 50;
+const yMin = 50, yMax = 350, yStep = 50;
 // ================================
 
 const svg = document.getElementById('chart');
@@ -74,10 +74,13 @@ function draw() {
   const m = { top: 14, right: 24, bottom: 52, left: 62 };
   const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
   const x = i => m.left + i * iw / (years.length - 1);
-  const y = v => m.top + ih - (v / yMax) * ih;
+  const y = v => m.top + ih - ((v - yMin) / (yMax - yMin)) * ih;
 
-  for (let v = 0; v <= yMax; v += yStep) {
-    el('line', { x1: m.left, x2: W - m.right, y1: y(v), y2: y(v), class: v === 0 ? 'baseline' : 'grid' });
+  // Bottom line at yMin, then grid lines at every multiple of yStep above it
+  el('line', { x1: m.left, x2: W - m.right, y1: y(yMin), y2: y(yMin), class: 'baseline' });
+  el('text', { x: m.left - 12, y: y(yMin) + 4, 'text-anchor': 'end', class: 'axis-label' }, yMin);
+  for (let v = Math.ceil((yMin + 1) / yStep) * yStep; v <= yMax; v += yStep) {
+    el('line', { x1: m.left, x2: W - m.right, y1: y(v), y2: y(v), class: 'grid' });
     el('text', { x: m.left - 12, y: y(v) + 4, 'text-anchor': 'end', class: 'axis-label' }, v);
   }
   years.forEach((yr, i) => el('text', { x: x(i), y: m.top + ih + 24, 'text-anchor': 'middle', class: 'year-label' }, yr));
