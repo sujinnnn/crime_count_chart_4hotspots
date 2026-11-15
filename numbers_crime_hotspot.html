@@ -8,8 +8,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #F8FBF6; font-family: "Public Sans", "Helvetica Neue", Arial, sans-serif; color: #1F2A2E; }
-  .wrap { position: relative; width: 100%; height: 100%; }
+  .wrap { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 10px 24px 4px 62px; list-style: none; font-size: 13px; font-weight: 500; color: #3F4A4D; }
+  .legend li { display: flex; align-items: center; gap: 7px; }
+  .legend i { width: 18px; height: 3px; border-radius: 2px; position: relative; }
+  .legend i::after { content: ""; position: absolute; left: 5px; top: -3.5px; width: 8px; height: 8px; border-radius: 50%; background: inherit; }
+  .plot { position: relative; flex: 1; min-height: 0; }
   svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .callout { font-size: 13px; font-weight: 700; paint-order: stroke; stroke: #F8FBF6; stroke-width: 4px; stroke-linejoin: round; pointer-events: none; transition: opacity 0.15s; }
+  svg.dim .callout { opacity: 0.18; }
+  svg.dim .callout.on { opacity: 1; }
   .grid { stroke: #DCE5DA; stroke-width: 1; stroke-dasharray: 3 5; }
   .baseline { stroke: #9AA5A9; stroke-width: 1; }
   .axis-label { font-size: 13px; fill: #6B7679; }
@@ -35,7 +43,10 @@
 </head>
 <body>
 <div class="wrap">
-  <svg id="chart" role="img" aria-label="Line chart of number of crimes by hot spot, 2020 to 2025"></svg>
+  <ul class="legend" id="legend" aria-hidden="true"></ul>
+  <div class="plot" id="plot">
+    <svg id="chart" role="img" aria-label="Line chart of number of crimes by hot spot, 2020 to 2025"></svg>
+  </div>
   <div class="tip" id="tip" role="status" aria-live="polite"></div>
 </div>
 
@@ -49,11 +60,23 @@ const series = [
   { name: 'Belvedere',      color: '#C2255C', values: [187, 189, 193, 124, 147, 146] }
 ];
 const yMin = 50, yMax = 350, yStep = 50;
+
+// Numbers written on the chart (keep 3-5). pos: 'above' or 'below'
+const callouts = [
+  { name: 'Panthersville',  year: '2021', pos: 'above' },   // peak, 304
+  { name: 'Stone Mill Run', year: '2023', pos: 'above' },   // peak, 240
+  { name: 'Belvedere',      year: '2023', pos: 'below' },   // sharp drop, 124
+  { name: 'Snapfinger',     year: '2020', pos: 'below' },   // lowest, 94
+  { name: 'Panthersville',  year: '2025', pos: 'above' }    // latest, 214 (same as Stone Mill Run)
+];
 // ================================
 
 const svg = document.getElementById('chart');
 const tip = document.getElementById('tip');
 const wrap = document.querySelector('.wrap');
+const plot = document.getElementById('plot');
+let calloutEls = [];
+document.getElementById('legend').innerHTML = series.map(s => '<li><i style="background:' + s.color + '"></i>' + s.name + '</li>').join('');
 const NS = 'http://www.w3.org/2000/svg';
 let lines = [], dots = [];
 
@@ -67,11 +90,11 @@ function el(tag, attrs, text) {
 
 function draw() {
   // Size the chart to whatever space the StoryMap embed gives it
-  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const W = plot.clientWidth, H = plot.clientHeight;
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   svg.innerHTML = '';
-  lines = []; dots = [];
-  const m = { top: 14, right: 24, bottom: 52, left: 62 };
+  lines = []; dots = []; calloutEls = [];
+  const m = { top: 18, right: 34, bottom: 56, left: 62 };
   const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
   const x = i => m.left + i * iw / (years.length - 1);
   const y = v => m.top + ih - ((v - yMin) / (yMax - yMin)) * ih;
@@ -84,7 +107,7 @@ function draw() {
     el('text', { x: m.left - 12, y: y(v) + 4, 'text-anchor': 'end', class: 'axis-label' }, v);
   }
   years.forEach((yr, i) => el('text', { x: x(i), y: m.top + ih + 24, 'text-anchor': 'middle', class: 'year-label' }, yr));
-  el('text', { x: m.left + iw / 2, y: H - 6, 'text-anchor': 'middle', class: 'axis-title' }, 'Year');
+  el('text', { x: m.left + iw / 2, y: H - 4, 'text-anchor': 'middle', class: 'axis-title' }, 'Year');
   el('text', { x: -(m.top + ih / 2), y: 16, transform: 'rotate(-90)', 'text-anchor': 'middle', class: 'axis-title' }, 'Number of crimes');
 
   series.forEach(s => {
@@ -101,6 +124,18 @@ function draw() {
     c.addEventListener('mouseleave', hideTip);
     c.addEventListener('blur', hideTip);
   }));
+
+  // Value labels on a few key points
+  callouts.forEach(c => {
+    const k = series.findIndex(s => s.name === c.name), i = years.indexOf(c.year);
+    if (k < 0 || i < 0) return;
+    const v = series[k].values[i];
+    const anchor = i === 0 ? 'start' : (i === years.length - 1 ? 'end' : 'middle');
+    const dx = i === 0 ? -4 : (i === years.length - 1 ? 4 : 0);
+    const t = el('text', { x: x(i) + dx, y: c.pos === 'below' ? y(v) + 24 : y(v) - 13,
+      'text-anchor': anchor, class: 'callout', fill: series[k].color }, v);
+    calloutEls.push({ el: t, k: k });
+  });
 }
 
 function showTip(dot, i, k) {
@@ -116,6 +151,7 @@ function showTip(dot, i, k) {
     '<div class="meta">' + years[i] + '</div><div class="val">' + v + '<small>crimes</small></div>' + extra;
   svg.classList.add('dim');
   tied.forEach(j => lines[j].classList.add('on'));
+  calloutEls.forEach(c => { if (tied.includes(c.k)) c.el.classList.add('on'); });
   dots.forEach(d => { if (tied.includes(d.k)) d.el.classList.add('on'); });
   tip.classList.add('show');
   const box = wrap.getBoundingClientRect(), r = dot.getBoundingClientRect();
@@ -130,6 +166,7 @@ function hideTip() {
   svg.classList.remove('dim');
   lines.forEach(l => l.classList.remove('on'));
   dots.forEach(d => d.el.classList.remove('on'));
+  calloutEls.forEach(c => c.el.classList.remove('on'));
 }
 
 draw();
