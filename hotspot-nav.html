@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same topic in other hot spots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Calistoga&display=swap" rel="stylesheet">
+<style>
+  /* Calistoga is also stored next to this file, so it shows even if Google Fonts is blocked */
+  @font-face {
+    font-family: "Calistoga";
+    src: url("calistoga.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  :root {
+    --ink: #1E2A22;
+    --muted: #66735F;
+    --line: #D3DDCC;
+    --paper: #FBFCF8;
+    --tint: #EAF2E3;
+    --accent: #4E7A45;
+  }
+  html, body { margin: 0; background: transparent; }
+  body { font-family: "Calistoga", Georgia, serif; color: var(--ink); padding: 2px 2px 6px; }
+
+  .label {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 0 7px; font-size: 12px; font-weight: 400; color: var(--muted);
+  }
+  .label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+
+  .btn {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 42px; padding: 7px 8px; box-sizing: border-box;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink); text-decoration: none; text-align: center;
+    font-family: "Calistoga", Georgia, serif;
+    font-size: 13px; line-height: 1.15; letter-spacing: 0.005em;
+    box-shadow: 0 1px 0 rgba(30, 42, 34, 0.04);
+    transition: background-color 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+    overflow: hidden;
+  }
+  .btn span { position: relative; min-width: 0; overflow-wrap: anywhere; }
+  .btn:hover {
+    background: var(--tint); border-color: var(--accent); color: #23401F;
+    box-shadow: 0 4px 12px rgba(78, 122, 69, 0.16);
+    transform: translateY(-1px);
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .msg { font-size: 12px; color: var(--muted); margin: 0; }
+
+  @media (max-width: 300px) { .row { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:hover { transform: none; } }
+</style>
+</head>
+<body>
+<p class="label" id="label">See this topic in other hot spots</p>
+<nav class="row" id="row" aria-labelledby="label"></nav>
+
+<script>
+// Button labels, in display order. Keys must match the column names in links.csv.
+const NAMES = {
+  stonemill:     'Stone Mill Run',
+  snapfinger:    'Snapfinger Rd',
+  panthersville: 'Panthersville Rd',
+  belvedere:     'Belvedere/\u200BGlenwood'
+};
+
+// Settings come from the iframe link, e.g. ?topic=crime-parcel&current=snapfinger
+const p = new URLSearchParams(location.search);
+const topic   = (p.get('topic') || '').trim().toLowerCase();
+const current = (p.get('current') || '').trim().toLowerCase();
+const target  = p.get('open') === 'new' ? '_blank' : '_top';
+if (p.get('label') === 'off') document.getElementById('label').hidden = true;
+
+const row = document.getElementById('row');
+
+function showMsg(text) { row.innerHTML = '<p class="msg">' + text + '</p>'; }
+
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+  const head = lines.shift().split(',').map(h => h.trim().toLowerCase());
+  const table = {};
+  lines.forEach(line => {
+    const cells = line.split(',').map(c => c.trim());
+    const rec = {};
+    head.forEach((h, i) => rec[h] = cells[i] || '');
+    if (rec.topic) table[rec.topic.toLowerCase()] = rec;
+  });
+  return table;
+}
+
+fetch('links.csv', { cache: 'no-cache' })
+  .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+  .then(text => {
+    const rec = parseCSV(text)[topic];
+    if (!rec) return showMsg('No links found for topic "' + topic + '". Check links.csv.');
+    let count = 0;
+    Object.keys(NAMES).forEach(key => {
+      if (key === current) return;                       // skip the hot spot the reader is in
+      const url = rec[key];
+      if (!url || !/^https?:\/\//.test(url)) return;     // skip blanks and PASTE_LINK placeholders
+      const a = document.createElement('a');
+      a.className = 'btn';
+      a.href = url;
+      a.target = target;
+      if (target === '_blank') a.rel = 'noopener';
+      a.innerHTML = '<span></span>';
+      a.firstChild.textContent = NAMES[key];
+      row.appendChild(a);
+      count++;
+    });
+    if (!count) showMsg('Links for this topic are not filled in yet.');
+  })
+  .catch(() => showMsg('Could not load links.csv.'));
+</script>
+</body>
+</html>

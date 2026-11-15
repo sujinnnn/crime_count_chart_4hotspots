@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Community navigation</title>
+<style>
+  body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
+
+  .button-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    width: 100%;
+  }
+
+  .nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 65px;
+    padding: 10px;
+    box-sizing: border-box;
+    background: #008577;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 7px;
+    text-align: center;
+  }
+  .nav-button:hover, .nav-button:focus-visible { background: #005f57; }
+  .nav-button:focus-visible { outline: 3px solid #7FD1C7; outline-offset: 2px; }
+
+  /* Button for the section the reader is already in */
+  .nav-button.current { background: #E6F3F1; color: #005f57; border: 2px solid #008577; cursor: default; }
+
+  @media (max-width: 600px) {
+    .button-container { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<nav class="button-container" id="buttons" aria-label="Hot spot navigation"></nav>
+
+<script>
+// =====================================================================
+// 1. LIST YOUR LINKS HERE — one block per topic, one link per hot spot.
+//    Replace each "PASTE_..._LINK" with the real StoryMap link.
+// =====================================================================
+const LINKS = {
+  crime: {
+    stonemill:     'PASTE_STONEMILL_CRIME_LINK',
+    snapfinger:    'https://storymaps.arcgis.com/stories/d46cb7b5847046f2a589293eb8018895#ref-n-MVZycp',
+    panthersville: 'PASTE_PANTHERSVILLE_CRIME_LINK',
+    belvedere:     'PASTE_BELVEDERE_CRIME_LINK'
+  },
+  sdoh: {
+    stonemill:     'PASTE_STONEMILL_SDOH_LINK',
+    snapfinger:    'PASTE_SNAPFINGER_SDOH_LINK',
+    panthersville: 'PASTE_PANTHERSVILLE_SDOH_LINK',
+    belvedere:     'PASTE_BELVEDERE_SDOH_LINK'
+  }
+  // Add more topics the same way, e.g. walkability: { ... }
+};
+
+// 2. Button labels (and their order).
+const NAMES = {
+  stonemill:     'Stone Mill Run',
+  snapfinger:    'Snapfinger',
+  panthersville: 'Panthersville',
+  belvedere:     'Belvedere'
+};
+// =====================================================================
+
+// Read the settings from the iframe link: ?topic=crime&current=snapfinger&hide=current&open=new
+const params  = new URLSearchParams(window.location.search);
+const topic   = (params.get('topic')   || 'crime').toLowerCase();
+const current = (params.get('current') || '').toLowerCase();
+const hideCurrent = params.get('hide') === 'current';     // remove the current hot spot's button
+const target  = params.get('open') === 'new' ? '_blank' : '_top';
+
+const links = LINKS[topic] || {};
+const box = document.getElementById('buttons');
+
+Object.keys(NAMES).forEach(key => {
+  if (key === current && hideCurrent) return;
+
+  if (key === current) {
+    const span = document.createElement('span');
+    span.className = 'nav-button current';
+    span.setAttribute('aria-current', 'page');
+    span.textContent = NAMES[key];
+    box.appendChild(span);
+    return;
+  }
+
+  const url = links[key];
+  if (!url || url.startsWith('PASTE_')) return;           // skip links you haven't filled in yet
+
+  const a = document.createElement('a');
+  a.className = 'nav-button';
+  a.href = url;
+  a.target = target;
+  if (target === '_blank') a.rel = 'noopener';
+  a.textContent = NAMES[key];
+  box.appendChild(a);
+});
+</script>
+</body>
+</html>
