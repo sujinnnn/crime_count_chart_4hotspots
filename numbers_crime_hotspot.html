@@ -9,10 +9,10 @@
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #F8FBF6; font-family: "Public Sans", "Helvetica Neue", Arial, sans-serif; color: #1F2A2E; }
   .wrap { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 10px 24px 4px 62px; list-style: none; font-size: 13px; font-weight: 500; color: #3F4A4D; }
-  .legend li { display: flex; align-items: center; gap: 7px; }
-  .legend i { width: 18px; height: 3px; border-radius: 2px; position: relative; }
-  .legend i::after { content: ""; position: absolute; left: 5px; top: -3.5px; width: 8px; height: 8px; border-radius: 50%; background: inherit; }
+  .legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 24px; margin: 0; padding: 12px 34px 6px 62px; list-style: none; font-size: 15.5px; font-weight: 600; color: #2B3538; }
+  .legend li { display: flex; align-items: center; gap: 9px; }
+  .legend i { width: 24px; height: 4px; border-radius: 2px; position: relative; }
+  .legend i::after { content: ""; position: absolute; left: 6px; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: inherit; box-shadow: 0 0 0 2px #FFFFFF; }
   .plot { position: relative; flex: 1; min-height: 0; }
   svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .callout { font-size: 13px; font-weight: 700; paint-order: stroke; stroke: #F8FBF6; stroke-width: 4px; stroke-linejoin: round; pointer-events: none; transition: opacity 0.15s; }
