@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Topics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Calistoga&display=swap" rel="stylesheet">
+<style>
+  :root { --green: #2B5219; --green-soft: #EAF3DE; --green-line: #97C459; }
+  body { margin: 0; padding: 16px; background: #FFFFFF; font-family: "Calistoga", serif; color: var(--green); }
+  .calistoga-regular { font-family: "Calistoga", serif; font-weight: 400; font-style: normal; }
+  .grid-b { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .btn-b {
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 120px; padding: 14px 16px; box-sizing: border-box;
+    border: 1.5px solid var(--green); border-radius: 10px;
+    background: transparent; color: var(--green); text-decoration: none;
+    transition: background 0.2s;
+  }
+  .btn-b .index { font-family: Arial, Helvetica, sans-serif; font-size: 12px; letter-spacing: 1px; opacity: 0.7; }
+  .btn-b .title { font-size: 20px; line-height: 1.25; }
+  .btn-b:hover { background: var(--green-soft); }
+  .btn-b:focus-visible { outline: 3px solid var(--green-line); outline-offset: 3px; }
+  @media (max-width: 760px) { .grid-b { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .grid-b { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="grid-b calistoga-regular">
+  <a class="btn-b" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-8tLhRH"><span class="index">01</span><span class="title">CRIME</span></a>
+  <a class="btn-b" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-1314ec"><span class="index">02</span><span class="title">Demographics</span></a>
+  <a class="btn-b" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-R6mBbS"><span class="index">03</span><span class="title">Social Determinant of Health</span></a>
+  <a class="btn-b" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-c8YVad"><span class="index">04</span><span class="title">Child Well-Being Index</span></a>
+</div>
+</body>
+</html>
