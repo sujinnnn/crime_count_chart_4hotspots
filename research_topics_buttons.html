@@ -1,0 +1,55 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Calistoga&display=swap" rel="stylesheet">
+<style>
+  .calistoga-regular {
+    font-family: "Calistoga", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 8px 0;
+  }
+  .topic-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    background: #2B5219;
+    color: #FFFFFF;
+    text-decoration: none;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 22px;
+    line-height: 1.25;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+    transition: background 0.2s, transform 0.15s;
+  }
+  .topic-btn:hover {
+    background: #1F3D11;
+    transform: translateY(-2px);
+  }
+  .topic-btn:focus-visible {
+    outline: 3px solid #97C459;
+    outline-offset: 3px;
+  }
+  @media (max-width: 760px) {
+    .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .topic-grid { grid-template-columns: 1fr; }
+    .topic-btn { min-height: 84px; font-size: 20px; }
+  }
+</style>
+
+<div class="topic-grid calistoga-regular">
+  <a class="topic-btn" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-8tLhRH">CRIME</a>
+  <a class="topic-btn" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-1314ec">Demographics</a>
+  <a class="topic-btn" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-R6mBbS">Social Determinant of Health</a>
+  <a class="topic-btn" target="_top" href="https://storymaps.arcgis.com/stories/7ffe9389d82948b8b4abb5a6cd7e9922#ref-n-c8YVad">Child Well-Being Index</a>
+</div>
